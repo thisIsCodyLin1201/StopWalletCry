@@ -1,0 +1,83 @@
+/* [Storyteller] Badge 樣式 - 輕鬆有趣的視覺設計 */
+
+.grindmeter-badge {
+    display: inline-block !important;
+    margin-left: 8px !important;
+    padding: 4px 12px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border-radius: 20px !important;
+    text-decoration: none !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    opacity: 0.9 !important;
+    transition: all 0.2s ease !important;
+    z-index: 999999 !important;
+    position: relative !important;
+}
+
+.grindmeter-badge:hover {
+    opacity: 1 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+/* 適應深色背景 */
+.grindmeter-badge.dark-mode {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%) !important;
+    box-shadow: 0 2px 4px rgba(255,255,255,0.1) !important;
+}
+
+/* 手機響應式 */
+@media (max-width: 768px) {
+    .grindmeter-badge {
+        font-size: 11px !important;
+        padding: 3px 10px !important;
+        margin-left: 6px !important;
+    }
+}
+
+/* 防止與網站樣式衝突 */
+.grindmeter-badge * {
+    box-sizing: border-box !important;
+}
+
+.grindmeter-badge::before,
+.grindmeter-badge::after {
+    display: none !important;
+}
+
+/* 動畫效果 */
+@keyframes grindmeter-fadein {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 0.9;
+        transform: translateY(0);
+    }
+}
+
+.grindmeter-badge.animate {
+    animation: grindmeter-fadein 0.3s ease-out !important;
+}
+
+/* 不同樣式變體 */
+.grindmeter-badge.variant-minimal {
+    background: #f0f0f0 !important;
+    color: #666 !important;
+    border: 1px solid #ddd !important;
+}
+
+.grindmeter-badge.variant-warning {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%) !important;
+}
+
+.grindmeter-badge.variant-success {
+    background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%) !important;
+}

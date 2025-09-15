@@ -1,0 +1,76 @@
+{
+  "manifest_version": 3,
+  "name": "StopWalletCry",
+  "version": "1.0.0",
+  "description": "看見價格背後的真實代價 - 工時換算與日常物件比較",
+  
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  
+  "host_permissions": [
+    "*://shopee.tw/*",
+    "*://www.eslite.com/*",
+    "*://www.momoshop.com.tw/*",
+    "*://www.books.com.tw/*",
+    "*://www.pinkoi.com/*"
+  ],
+  
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "*://shopee.tw/*",
+        "*://www.eslite.com/*",
+        "*://www.momoshop.com.tw/*",
+        "*://www.books.com.tw/*",
+        "*://www.pinkoi.com/*"
+      ],
+      "js": [
+        "utils/parsePrice.js",
+        "utils/calculator.js",
+        "utils/throttle.js",
+        "utils/bus.js",
+        "content/sites/shopee.js",
+        "content/sites/eslite.js",
+        "content/sites/momo.js",
+        "content/sites/books.js",
+        "content/sites/pinkoi.js",
+        "content/content.js"
+      ],
+      "css": [
+        "styles/badge.css"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "StopWalletCry - 快速設定",
+    "default_icon": {
+      "16": "assets/icon16.png",
+      "48": "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+  
+  "options_page": "options/options.html",
+  
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["styles/badge.css"],
+      "matches": ["*://*/*"]
+    }
+  ]
+}

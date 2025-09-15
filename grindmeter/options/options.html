@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StopWalletCry 設定</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 0 0 8px 0;
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #666;
+            margin: 0;
+            font-size: 1.1em;
+        }
+        
+        .section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h2 {
+            margin: 0 0 16px 0;
+            color: #333;
+            font-size: 1.3em;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .toggle.active {
+            background: #667eea;
+        }
+        
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+        
+        .toggle.active::after {
+            transform: translateX(26px);
+        }
+        
+        .items-list {
+            margin-top: 16px;
+        }
+        
+        .item-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        .item-row input[type="text"] {
+            flex: 1;
+            border: 1px solid #ddd;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .item-row input[type="number"] {
+            width: 80px;
+            border: 1px solid #ddd;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        .btn-add {
+            background: #28a745;
+            color: white;
+            margin-top: 12px;
+        }
+        
+        .save-notice {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+        }
+        
+        .save-notice.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛑 StopWalletCry</h1>
+            <p>看見價格背後的真實代價</p>
+        </div>
+        
+        <div class="section">
+            <h2>💰 時薪設定</h2>
+            <p style="color: #666; margin-bottom: 16px;">輸入你的時薪，讓數字說人話</p>
+            <div class="form-group">
+                <label for="hourlyWage">時薪 (NT$)</label>
+                <input type="number" id="hourlyWage" min="1" step="1" placeholder="183">
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🎛️ 顯示設定</h2>
+            <div class="toggle-group">
+                <div class="toggle" id="showHoursToggle"></div>
+                <label>顯示工時換算</label>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle" id="showItemsToggle"></div>
+                <label>顯示日常物件換算</label>
+            </div>
+            <div class="form-group">
+                <label for="maxItems">最多顯示幾個物件</label>
+                <input type="number" id="maxItems" min="1" max="5" value="2">
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>☕ 日常物件管理</h2>
+            <p style="color: #666; margin-bottom: 16px;">新增你熟悉的單位：咖啡、珍奶、便當…</p>
+            <div class="items-list" id="itemsList">
+                <!-- 動態生成的物件列表 -->
+            </div>
+            <button class="btn btn-add" id="addItemBtn">+ 新增物件</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <button class="btn btn-primary" id="saveBtn">💾 儲存設定</button>
+        </div>
+    </div>
+    
+    <div class="save-notice" id="saveNotice">
+        ✅ 設定已儲存！
+    </div>
+    
+    <script src="options.js"></script>
+</body>
+</html>
