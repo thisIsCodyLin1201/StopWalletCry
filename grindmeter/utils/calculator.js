@@ -80,10 +80,16 @@ class GrindCalculator {
             return "";
         }
 
-        if (hours === 1.0) {
-            return "1 小時";
+        const totalMinutes = Math.round(hours * 60);
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+
+        if (h === 0) {
+            return `${m}m`;
+        } else if (m === 0) {
+            return `${h}h`;
         } else {
-            return `${hours} 小時`;
+            return `${h}h ${m}m`;
         }
     }
 
@@ -130,8 +136,8 @@ class GrindCalculator {
         // 解析設定
         if (settings) {
             this.hourlyWage = settings.hourlyWage || 183;
-            const showHours = settings.showHours !== false;
-            const showItems = settings.showItems !== false;
+            const showHours = settings.showHours !== false; // 預設顯示
+            const showItems = settings.showItems !== false; // 預設顯示
             const maxItems = settings.maxItemsDisplay || 2;
             const dailyItems = settings.dailyItems || this.dailyItems;
 

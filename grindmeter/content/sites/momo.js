@@ -30,18 +30,50 @@ class MomoStrategy {
     findPriceElements() {
         const elements = new Set();
         
-        this.priceSelectors.forEach(selector => {
+        // 優先使用更精確的選擇器
+        const prioritySelectors = [
+            '.price_sale',
+            '.productPrice__salePrice',
+            '.prdPrice'
+        ];
+        
+        // 先嘗試優先選擇器
+        let foundPriority = false;
+        prioritySelectors.forEach(selector => {
             try {
                 const found = document.querySelectorAll(selector);
                 Array.from(found).forEach(element => {
                     if (this.isValidPriceElement(element)) {
                         elements.add(element);
+                        foundPriority = true;
                     }
                 });
             } catch (e) {
                 // 忽略無效選擇器
             }
         });
+        
+        // 如果優先選擇器沒找到，再用通用選擇器
+        if (!foundPriority) {
+            const fallbackSelectors = [
+                '.price',
+                '[class*="price"]:not(.price_original)',
+                '[class*="Price"]'
+            ];
+            
+            fallbackSelectors.forEach(selector => {
+                try {
+                    const found = document.querySelectorAll(selector);
+                    Array.from(found).forEach(element => {
+                        if (this.isValidPriceElement(element) && elements.size < 20) {
+                            elements.add(element);
+                        }
+                    });
+                } catch (e) {
+                    // 忽略無效選擇器
+                }
+            });
+        }
 
         return Array.from(elements).filter(element => 
             !throttleManager.isProcessed(element)
@@ -53,15 +85,23 @@ class MomoStrategy {
             return false;
         }
 
-        const text = element.textContent || '';
+        const text = element.textContent?.trim() || '';
+        
+        // 文字長度檢查（避免選中太長的文字）
+        if (text.length > 30 || text.length < 2) {
+            return false;
+        }
+
+        // 必須包含價格
         if (!PriceParser.mayContainPrice(text)) {
             return false;
         }
 
-        // 排除頁首頁尾等
+        // 排除頁首頁尾等無關區域
         const excludeSelectors = [
-            '.header', '.footer', '.navigation',
-            '[data-grindmeter]'
+            '.header', '.footer', '.navigation', '.breadcrumb',
+            '.sidebar', '.menu', '.toolbar', '.pagination',
+            '[data-grindmeter]', '[data-grindmeter-badge]'
         ];
 
         for (const selector of excludeSelectors) {
@@ -70,15 +110,45 @@ class MomoStrategy {
             }
         }
 
+        // 排除隱藏元素
+        const style = window.getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden' || 
+            style.opacity === '0' || element.offsetParent === null) {
+            return false;
+        }
+
+        // 確保元素在可視區域內（或接近）
+        const rect = element.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+            return false;
+        }
+
         return true;
     }
 
     insertBadge(priceElement, badge) {
         try {
-            const container = this.findInsertContainer(priceElement);
-            if (container) {
-                badge.style.marginLeft = '6px';
-                container.appendChild(badge);
+            // 檢查是否已有 badge
+            const parent = priceElement.parentElement;
+            if (parent && parent.querySelector('[data-grindmeter-badge]')) {
+                return false;
+            }
+
+            // 設定 badge 樣式，避免重疊
+            badge.style.cssText = `
+                display: inline-block !important;
+                margin-left: 6px !important;
+                vertical-align: middle !important;
+                position: relative !important;
+                z-index: 999999 !important;
+            `;
+
+            // 嘗試插入到價格元素後面
+            if (priceElement.nextSibling) {
+                priceElement.parentNode.insertBefore(badge, priceElement.nextSibling);
+                return true;
+            } else {
+                priceElement.parentNode.appendChild(badge);
                 return true;
             }
         } catch (error) {

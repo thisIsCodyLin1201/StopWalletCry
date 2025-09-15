@@ -58,8 +58,25 @@ class ThrottleManager {
             return true;
         }
         
-        return this.processedElements.has(element) || 
-               element.hasAttribute('data-grindmeter');
+        // 檢查元素本身是否已處理
+        if (this.processedElements.has(element) || 
+            element.hasAttribute('data-grindmeter') ||
+            element.hasAttribute('data-grindmeter-badge')) {
+            return true;
+        }
+
+        // 檢查附近是否已有相同價格的 badge
+        const parent = element.parentElement;
+        if (parent) {
+            const existingBadges = parent.querySelectorAll('[data-grindmeter-badge]');
+            if (existingBadges.length > 0) {
+                // 如果已有 badge，標記此元素為已處理
+                this.markProcessed(element);
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**

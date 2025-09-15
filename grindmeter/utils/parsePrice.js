@@ -3,7 +3,7 @@
 
 class PriceParser {
     /**
-     * 解析價格文字，提取數字金額
+     * 解析價格文字，提取數字金額（簡化版本）
      * @param {string} priceText - 包含價格的文字
      * @returns {number|null} - 解析出的價格數字，失敗返回 null
      */
@@ -13,14 +13,31 @@ class PriceParser {
         }
 
         // 移除 HTML 標籤
-        const cleanText = priceText.replace(/<[^>]*>/g, '');
+        const cleanText = priceText.replace(/<[^>]*>/g, '').trim();
         
-        // 尋找 NT$ 或 $ 開頭的價格模式
+        // 只排除最明顯的非價格內容
+        const exclusionPatterns = [
+            /^[0-9]+個$/,        // 純"數字個"
+            /^[0-9]+星$/,        // 純"數字星"
+            /^[0-9]+%$/,         // 純百分比
+            /^[0-9]+折$/,        // 純折扣
+            /^[0-9]{1}$/,        // 單一數字
+            /^評價/,             // 以評價開頭
+            /^已售/,             // 以已售開頭
+        ];
+
+        for (const pattern of exclusionPatterns) {
+            if (pattern.test(cleanText)) {
+                return null;
+            }
+        }
+        
+        // 簡化的價格正則模式
         const patterns = [
-            /NT\$\s*([0-9,]+(?:\.[0-9]+)?)/i,  // NT$1,234 或 NT$ 1,234.00
-            /\$\s*([0-9,]+(?:\.[0-9]+)?)/,     // $1,234 或 $ 1,234.00
-            /([0-9,]+(?:\.[0-9]+)?)\s*元/,     // 1,234元 或 1,234.00元
-            /([0-9,]+(?:\.[0-9]+)?)/           // 純數字 1,234 或 1,234.00
+            /NT\$\s*([0-9,]+)/i,     // NT$1,234
+            /\$\s*([0-9,]+)/,        // $1,234
+            /([0-9,]+)\s*元/,        // 1,234元
+            /^([0-9,]{2,})$/         // 純數字（至少2位）
         ];
 
         for (const pattern of patterns) {
@@ -29,9 +46,9 @@ class PriceParser {
                 const numberStr = match[1].replace(/,/g, ''); // 移除千分位逗號
                 const price = parseFloat(numberStr);
                 
-                // 驗證價格合理性（1-1000000 NT$）
-                if (!isNaN(price) && price >= 1 && price <= 1000000) {
-                    return Math.round(price); // 四捨五入到整數
+                // 合理價格範圍檢查
+                if (!isNaN(price) && price >= 1 && price <= 100000) {
+                    return Math.round(price);
                 }
             }
         }
@@ -90,24 +107,22 @@ class PriceParser {
     }
 
     /**
-     * 檢查文字是否可能包含價格
+     * 檢查文字是否可能包含價格（簡化版本）
      * @param {string} text - 要檢查的文字
      * @returns {boolean} - 是否可能包含價格
      */
     static mayContainPrice(text) {
         if (!text || typeof text !== 'string') return false;
         
-        const priceIndicators = [
-            /NT\$/i,
-            /\$/,
-            /元/,
-            /[0-9,]+/,
-            /price/i,
-            /cost/i,
-            /fee/i
-        ];
-
-        return priceIndicators.some(pattern => pattern.test(text));
+        const cleanText = text.trim();
+        
+        // 簡化排除，只排除最明顯的
+        if (/^[0-9]+個$|^[0-9]+星$|^評價|^已售/.test(cleanText)) {
+            return false;
+        }
+        
+        // 檢查是否包含價格指標
+        return /NT\$|\$|元|[0-9]{2,}/.test(cleanText);
     }
 
     /**
@@ -159,7 +174,7 @@ class PriceParser {
     }
 
     /**
-     * 計算價格元素的信心度
+     * 計算價格元素的信心度（增強版本）
      * @param {Element} element - 要評估的元素
      * @returns {number} - 信心度分數 (0-100)
      */
@@ -172,35 +187,50 @@ class PriceParser {
         const id = (element.id || '').toLowerCase();
         const text = (element.textContent || '').toLowerCase();
 
-        // 正面指標
+        // 正面指標（提升信心度）
         const positiveKeywords = [
-            'price', 'cost', 'amount', 'fee', 'total',
-            '價格', '金額', '費用', '總計', '售價'
+            'price', 'cost', 'amount', 'fee', 'total', 'money',
+            '價格', '金額', '費用', '總計', '售價', '定價', '特價', '現價', '會員價'
         ];
 
-        // 負面指標
+        // 負面指標（降低信心度）
         const negativeKeywords = [
-            'shipping', 'tax', 'discount', 'save',
-            '運費', '稅', '折扣', '節省', '原價'
+            'shipping', 'tax', 'discount', 'save', 'quantity', 'number', 'count',
+            '運費', '稅', '折扣', '節省', '原價', '數量', '個數', '件數', '評價', '評分',
+            '已售', '庫存', '天數', '月份', '年份', '尺寸', '容量', '重量'
         ];
+
+        // 嚴重負面指標（調整為較溫和的懲罰）
+        const severeNegativePatterns = [
+            /^[0-9]+個/, /^[0-9]+星/, /^[0-9]+%$/, /^[0-9]+折$/,
+            /^評價/, /^已售/, /^庫存/
+        ];
+
+        // 檢查嚴重負面模式（減少懲罰力度）
+        for (const pattern of severeNegativePatterns) {
+            if (pattern.test(text)) {
+                confidence -= 25;  // 從 -50 調整為 -25
+                break;
+            }
+        }
 
         // 檢查正面關鍵字
         positiveKeywords.forEach(keyword => {
             if (className.includes(keyword) || id.includes(keyword)) {
-                confidence += 20;
+                confidence += 25;
             }
             if (text.includes(keyword)) {
-                confidence += 10;
+                confidence += 15;
             }
         });
 
-        // 檢查負面關鍵字
+        // 檢查負面關鍵字（減少懲罰）
         negativeKeywords.forEach(keyword => {
             if (className.includes(keyword) || id.includes(keyword)) {
-                confidence -= 30;
+                confidence -= 20;  // 從 -30 調整為 -20
             }
             if (text.includes(keyword)) {
-                confidence -= 15;
+                confidence -= 10;  // 從 -20 調整為 -10
             }
         });
 
@@ -210,11 +240,32 @@ class PriceParser {
             confidence += 5;
         }
 
+        // 檢查是否有貨幣符號
+        if (/NT\$|\$|元/.test(text)) {
+            confidence += 20;
+        }
+
         // 字體大小加分（假設價格通常字體較大）
-        const style = window.getComputedStyle(element);
-        const fontSize = parseFloat(style.fontSize);
-        if (fontSize > 16) {
-            confidence += 10;
+        try {
+            const style = window.getComputedStyle(element);
+            const fontSize = parseFloat(style.fontSize);
+            if (fontSize > 16) {
+                confidence += 10;
+            }
+            if (fontSize > 20) {
+                confidence += 5;
+            }
+        } catch (e) {
+            // 如果無法取得樣式，忽略錯誤
+        }
+
+        // 檢查數字格式合理性
+        const numbers = text.match(/[0-9]{2,}/g);
+        if (numbers && numbers.length === 1) {
+            const num = parseInt(numbers[0]);
+            if (num >= 10 && num <= 100000) {
+                confidence += 10;
+            }
         }
 
         return Math.max(0, Math.min(100, confidence));

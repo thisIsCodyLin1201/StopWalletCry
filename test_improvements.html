@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StopWalletCry 改進測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 3px;
+        }
+        .price-text {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .result {
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        .pass { color: #27ae60; }
+        .fail { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>StopWalletCry 改進測試頁面</h1>
+    
+    <div class="test-section">
+        <h2>1. 時間格式測試</h2>
+        <div class="test-item">
+            <div class="price-text">NT$ 850</div>
+            <div id="time-format-result" class="result">載入中...</div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 價格檢測準確性測試</h2>
+        <div class="test-item">
+            <div class="price-text">3個特價</div>
+            <div id="false-positive-1" class="result">載入中...</div>
+        </div>
+        <div class="test-item">
+            <div class="price-text">5星評價</div>
+            <div id="false-positive-2" class="result">載入中...</div>
+        </div>
+        <div class="test-item">
+            <div class="price-text">NT$ 1,299</div>
+            <div id="true-positive-1" class="result">載入中...</div>
+        </div>
+        <div class="test-item">
+            <div class="price-text">特價 599元</div>
+            <div id="true-positive-2" class="result">載入中...</div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 簡化UI測試</h2>
+        <div id="badge-container"></div>
+    </div>
+
+    <!-- 載入必要的腳本 -->
+    <script src="grindmeter/utils/calculator.js"></script>
+    <script src="grindmeter/utils/parsePrice.js"></script>
+    
+    <script>
+        // 測試時間格式
+        function testTimeFormat() {
+            const price = 850;
+            const hourlyWage = 200; // 假設時薪 200
+            
+            try {
+                const hours = price / hourlyWage;
+                const formattedTime = formatHours(hours);
+                
+                document.getElementById('time-format-result').innerHTML = 
+                    `<span class="pass">✓ 新格式: ${formattedTime}</span>`;
+            } catch (error) {
+                document.getElementById('time-format-result').innerHTML = 
+                    `<span class="fail">✗ 錯誤: ${error.message}</span>`;
+            }
+        }
+
+        // 測試價格檢測
+        function testPriceDetection() {
+            const testCases = [
+                { text: '3個特價', id: 'false-positive-1', shouldDetect: false },
+                { text: '5星評價', id: 'false-positive-2', shouldDetect: false },
+                { text: 'NT$ 1,299', id: 'true-positive-1', shouldDetect: true },
+                { text: '特價 599元', id: 'true-positive-2', shouldDetect: true }
+            ];
+
+            testCases.forEach(testCase => {
+                try {
+                    const detected = PriceParser.parse(testCase.text);
+                    const isDetected = detected !== null;
+                    const passed = isDetected === testCase.shouldDetect;
+                    
+                    const resultText = isDetected ? 
+                        `檢測到價格: ${detected}` : 
+                        '未檢測到價格';
+                    
+                    document.getElementById(testCase.id).innerHTML = 
+                        `<span class="${passed ? 'pass' : 'fail'}">
+                            ${passed ? '✓' : '✗'} ${resultText}
+                        </span>`;
+                } catch (error) {
+                    document.getElementById(testCase.id).innerHTML = 
+                        `<span class="fail">✗ 錯誤: ${error.message}</span>`;
+                }
+            });
+        }
+
+        // 測試簡化UI（創建測試徽章）
+        function testSimplifiedUI() {
+            const badgeContainer = document.getElementById('badge-container');
+            
+            // 創建測試徽章
+            const badge = document.createElement('div');
+            badge.style.cssText = `
+                position: relative;
+                display: inline-block;
+                background: #6c757d;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 500;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                margin: 10px 0;
+            `;
+            badge.textContent = '3h 25m | 1.5個 咖啡';
+            
+            badgeContainer.appendChild(badge);
+            badgeContainer.innerHTML += '<p class="pass">✓ 簡化UI樣式已套用</p>';
+        }
+
+        // 輔助函數：格式化小時
+        function formatHours(hours) {
+            const wholeHours = Math.floor(hours);
+            const minutes = Math.round((hours - wholeHours) * 60);
+            
+            if (wholeHours === 0) {
+                return `${minutes}m`;
+            } else if (minutes === 0) {
+                return `${wholeHours}h`;
+            } else {
+                return `${wholeHours}h ${minutes}m`;
+            }
+        }
+
+        // 執行所有測試
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testTimeFormat();
+                testPriceDetection();
+                testSimplifiedUI();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

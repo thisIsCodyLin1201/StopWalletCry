@@ -114,10 +114,22 @@ class StopWalletCry {
             return;
         }
 
+        // 檢查是否已經有 badge 在附近
+        if (this.hasNearbyBadge(element)) {
+            throttleManager.markProcessed(element);
+            return;
+        }
+
         try {
             // 解析價格
             const price = PriceParser.parseFromElement(element);
             if (!price || price <= 0) {
+                return;
+            }
+
+            // 檢查價格重複（避免同一價格多次顯示）
+            if (this.isDuplicatePrice(element, price)) {
+                throttleManager.markProcessed(element);
                 return;
             }
 
@@ -141,12 +153,53 @@ class StopWalletCry {
     }
 
     /**
+     * 檢查附近是否已有 badge
+     */
+    hasNearbyBadge(element) {
+        // 檢查父容器內是否已有 badge
+        const container = element.closest('[class*="product"], [class*="item"], [class*="card"]') || element.parentElement;
+        if (container && container.querySelector('[data-grindmeter-badge]')) {
+            return true;
+        }
+
+        // 檢查兄弟元素
+        const siblings = element.parentElement?.children;
+        if (siblings) {
+            for (const sibling of siblings) {
+                if (sibling.hasAttribute('data-grindmeter-badge')) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 檢查是否為重複價格
+     */
+    isDuplicatePrice(element, price) {
+        // 在同一商品容器內，避免同一價格重複顯示
+        const productContainer = element.closest('[class*="product"], [class*="item"], [class*="card"]');
+        if (productContainer) {
+            const existingBadges = productContainer.querySelectorAll('[data-grindmeter-badge]');
+            for (const badge of existingBadges) {
+                const existingPrice = parseInt(badge.getAttribute('data-price'));
+                if (existingPrice === price) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * 建立 badge 元素
      */
     createBadge(text, price) {
         const badge = document.createElement('span');
         badge.className = 'grindmeter-badge animate';
-        badge.textContent = `= ${text}`;
+        badge.textContent = text;
         badge.setAttribute('data-price', price);
         badge.setAttribute('data-grindmeter-badge', '1');
         

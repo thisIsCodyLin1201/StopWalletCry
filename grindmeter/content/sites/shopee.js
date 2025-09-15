@@ -154,21 +154,32 @@ class ShopeeStrategy {
      */
     insertBadge(priceElement, badge) {
         try {
-            const insertTarget = this.findBestInsertTarget(priceElement);
-            
-            if (insertTarget) {
-                // Shopee 特殊處理：添加適當的間距
-                badge.style.marginLeft = '8px';
-                badge.style.marginTop = '2px';
-                badge.style.display = 'inline-block';
-                
-                insertTarget.appendChild(badge);
+            // 檢查是否已有 badge
+            const parent = priceElement.parentElement;
+            if (parent && parent.querySelector('[data-grindmeter-badge]')) {
+                return false;
+            }
+
+            // 設定 badge 樣式，避免重疊
+            badge.style.cssText = `
+                display: inline-block !important;
+                margin-left: 6px !important;
+                vertical-align: middle !important;
+                position: relative !important;
+                z-index: 999999 !important;
+            `;
+
+            // 嘗試插入到價格元素後面
+            if (priceElement.nextSibling) {
+                priceElement.parentNode.insertBefore(badge, priceElement.nextSibling);
+                return true;
+            } else {
+                priceElement.parentNode.appendChild(badge);
                 return true;
             }
         } catch (error) {
-            console.warn('[ShopeeStrategy] 插入 badge 失敗:', error);
+            console.warn('[ShopeeStrategy] 插入失敗:', error);
         }
-        
         return false;
     }
 

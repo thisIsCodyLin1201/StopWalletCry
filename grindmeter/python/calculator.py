@@ -90,12 +90,16 @@ class GrindCalculator:
         if hours <= 0:
             return ""
             
-        if hours == 1.0:
-            return "1 小時"
-        elif hours < 1.0:
-            return f"{hours} 小時"
+        total_minutes = round(hours * 60)
+        h = total_minutes // 60
+        m = total_minutes % 60
+        
+        if h == 0:
+            return f"{m}m"
+        elif m == 0:
+            return f"{h}h"
         else:
-            return f"{hours} 小時"
+            return f"{h}h {m}m"
     
     def format_items_text(self, items_result, max_display=2):
         """

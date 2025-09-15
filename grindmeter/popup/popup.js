@@ -157,6 +157,7 @@ class PopupManager {
                 this.settings.showHours = !this.settings.showHours;
                 this.updateToggleState(hoursToggle, this.settings.showHours);
                 await this.saveSettings();
+                this.renderUI(); // 立即更新 UI
             });
         }
 
@@ -167,6 +168,7 @@ class PopupManager {
                 this.settings.showItems = !this.settings.showItems;
                 this.updateToggleState(itemsToggle, this.settings.showItems);
                 await this.saveSettings();
+                this.renderUI(); // 立即更新 UI
             });
         }
 

@@ -128,6 +128,7 @@ class OptionsManager {
                 const value = parseFloat(e.target.value);
                 if (value > 0) {
                     this.settings.hourlyWage = value;
+                    this.autoSave();
                 }
             });
         }
@@ -138,6 +139,7 @@ class OptionsManager {
             showHoursToggle.addEventListener('click', () => {
                 this.settings.showHours = !this.settings.showHours;
                 this.updateToggleState(showHoursToggle, this.settings.showHours);
+                this.autoSave();
             });
         }
 
@@ -146,6 +148,7 @@ class OptionsManager {
             showItemsToggle.addEventListener('click', () => {
                 this.settings.showItems = !this.settings.showItems;
                 this.updateToggleState(showItemsToggle, this.settings.showItems);
+                this.autoSave();
             });
         }
 
@@ -156,6 +159,7 @@ class OptionsManager {
                 const value = parseInt(e.target.value);
                 if (value >= 1 && value <= 5) {
                     this.settings.maxItemsDisplay = value;
+                    this.autoSave();
                 }
             });
         }
@@ -175,6 +179,44 @@ class OptionsManager {
                 this.saveSettings();
             });
         }
+
+        // 監聽來自其他頁面的設定變更
+        if (chrome.storage) {
+            chrome.storage.onChanged.addListener((changes, namespace) => {
+                if (namespace === 'local') {
+                    this.handleExternalSettingsChange(changes);
+                }
+            });
+        }
+    }
+
+    /**
+     * 處理來自外部的設定變更
+     */
+    handleExternalSettingsChange(changes) {
+        let shouldUpdate = false;
+        
+        for (const [key, change] of Object.entries(changes)) {
+            if (['hourlyWage', 'showHours', 'showItems', 'maxItemsDisplay', 'dailyItems'].includes(key)) {
+                this.settings[key] = change.newValue;
+                shouldUpdate = true;
+            }
+        }
+
+        if (shouldUpdate) {
+            this.renderSettings();
+            this.renderItems();
+        }
+    }
+
+    /**
+     * 自動儲存（延遲 500ms 避免頻繁儲存）
+     */
+    autoSave() {
+        clearTimeout(this.autoSaveTimer);
+        this.autoSaveTimer = setTimeout(() => {
+            this.saveSettings();
+        }, 500);
     }
 
     /**
